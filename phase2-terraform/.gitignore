@@ -1,0 +1,8 @@
+# Terraform の自動生成ファイル・一時ファイルを除外
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+!terraform.tfvars.example
+.tmp/
