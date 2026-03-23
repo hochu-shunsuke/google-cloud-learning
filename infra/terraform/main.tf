@@ -183,7 +183,7 @@ resource "google_cloud_run_v2_service" "image_upload_api" {
       resources {
         limits = {
           cpu    = "1"
-          memory = "256Mi"
+          memory = "512Mi"
         }
       }
     }
@@ -230,7 +230,7 @@ resource "google_cloud_run_v2_service" "bq_subscriber" {
       resources {
         limits = {
           cpu    = "1"
-          memory = "256Mi"
+          memory = "512Mi"
         }
       }
     }
