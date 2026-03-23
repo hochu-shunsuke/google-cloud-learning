@@ -147,6 +147,8 @@ resource "google_cloudfunctions2_function" "analyze_image" {
   service_config {
     available_memory      = "256M"
     timeout_seconds       = 60
+    max_instance_count    = 1
+    ingress_settings      = "ALLOW_INTERNAL_ONLY"
     service_account_email = var.service_account_email
     environment_variables = {
       PROJECT_ID   = var.project_id
@@ -162,7 +164,7 @@ resource "google_cloudfunctions2_function" "analyze_image" {
 resource "google_cloud_run_v2_service" "image_upload_api" {
   name     = "image-upload-api"
   location = var.region
-  ingress  = "INGRESS_TRAFFIC_ALL"
+  ingress  = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
   template {
     service_account = var.service_account_email
@@ -189,7 +191,7 @@ resource "google_cloud_run_v2_service" "image_upload_api" {
     }
     scaling {
       min_instance_count = 0
-      max_instance_count = 3
+      max_instance_count = 1
     }
   }
 }
@@ -236,7 +238,7 @@ resource "google_cloud_run_v2_service" "bq_subscriber" {
     }
     scaling {
       min_instance_count = 0
-      max_instance_count = 3
+      max_instance_count = 1
     }
   }
 }

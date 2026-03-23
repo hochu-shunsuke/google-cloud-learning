@@ -1,28 +1,4 @@
 # ─────────────────────────────────────────
-# Cloud Run: image-upload-api を全公開
-# ─────────────────────────────────────────
-
-resource "google_cloud_run_v2_service_iam_member" "upload_api_public" {
-  project  = var.project_id
-  location = google_cloud_run_v2_service.image_upload_api.location
-  name     = google_cloud_run_v2_service.image_upload_api.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
-# ─────────────────────────────────────────
-# Cloud Functions: analyze-image を全公開
-# ─────────────────────────────────────────
-
-resource "google_cloudfunctions2_function_iam_member" "analyze_image_public" {
-  project        = var.project_id
-  location       = google_cloudfunctions2_function.analyze_image.location
-  cloud_function = google_cloudfunctions2_function.analyze_image.name
-  role           = "roles/cloudfunctions.invoker"
-  member         = "allUsers"
-}
-
-# ─────────────────────────────────────────
 # bq-subscriber: Pub/Sub SA のみ呼び出し可
 # ─────────────────────────────────────────
 
