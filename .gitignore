@@ -1,0 +1,7 @@
+# macOS
+.DS_Store
+
+# Local Go build outputs in this repo
+services/upload-api/upload-api
+services/analyze-function/analyze-function
+services/bq-subscriber/bq-subscriber

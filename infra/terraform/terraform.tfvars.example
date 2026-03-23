@@ -1,0 +1,5 @@
+project_id            = "gen-lang-client-0213648671"
+region                = "asia-northeast1"
+service_account_email = "YOUR_PROJECT_NUMBER-compute@developer.gserviceaccount.com"
+upload_api_image      = "asia-northeast1-docker.pkg.dev/gen-lang-client-0213648671/cloud-run-source-deploy/image-upload-api"
+bq_subscriber_image   = "asia-northeast1-docker.pkg.dev/gen-lang-client-0213648671/cloud-run-source-deploy/bq-subscriber"

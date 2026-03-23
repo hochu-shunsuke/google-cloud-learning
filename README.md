@@ -1,7 +1,7 @@
 # Google Cloud Learning
 
-Go言語を使って GCP 主要サービスを段階的に実装する学習プロジェクト。  
-「画像アップロード → AI解析 → データ蓄積 → 可視化」という実践的なパイプラインを構築します。
+Go言語を使って GCP 主要サービスを実装する学習プロジェクト。  
+「画像アップロード → AI解析 → データ蓄積 → 可視化」の実践パイプラインを、サービス単位で管理します。
 
 ## アーキテクチャ全体図
 
@@ -12,7 +12,7 @@ Go言語を使って GCP 主要サービスを段階的に実装する学習プ�
     ▼
 [Cloud Run: image-upload-api]  ─── 画像保存 ──▶ [Cloud Storage]
     │
-    │ POST /analyze（bucket/object）
+    │ POST /analyze（bucket_name/object_name）
     ▼
 [Cloud Functions: analyze-image]
     │  Vision API で画像解析
@@ -35,15 +35,15 @@ Go言語を使って GCP 主要サービスを段階的に実装する学習プ�
 [Looker Studio ダッシュボード]
 ```
 
-## フェーズ構成
+## リポジトリ構成
 
-| フェーズ | ディレクトリ | サービス | 内容 |
-|---------|------------|---------|------|
-| Phase1 | [phase1-cloud-run/](./phase1-cloud-run/) | Cloud Run + Cloud Storage | 画像アップロードAPI |
-| Phase2 | [phase2-terraform/](./phase2-terraform/) | Terraform | 全リソースの Infrastructure as Code 化 |
-| Phase3 | [phase3-ai-pipeline/](./phase3-ai-pipeline/) | Cloud Functions + Vision API + Pub/Sub | AI画像解析パイプライン |
-| Phase4 | [phase4-bigquery/](./phase4-bigquery/) | Cloud Run + BigQuery | 解析結果のデータウェアハウス蓄積 |
-| Phase5 | [phase5-looker-studio/](./phase5-looker-studio/) | Looker Studio | BIダッシュボード可視化 |
+| 区分 | ディレクトリ | 説明 |
+|------|--------------|------|
+| Services | [services/upload-api/](./services/upload-api/) | Cloud Run: 画像アップロード API |
+| Services | [services/analyze-function/](./services/analyze-function/) | Cloud Functions: Vision API 解析 + Pub/Sub publish |
+| Services | [services/bq-subscriber/](./services/bq-subscriber/) | Cloud Run: Pub/Sub Push を受信して BigQuery へ書き込み |
+| Infrastructure | [infra/terraform/](./infra/terraform/) | GCP リソースの IaC 管理 |
+| Analytics | [analytics/looker-studio/](./analytics/looker-studio/) | BigQuery ビューと Looker Studio 可視化 |
 
 ## 技術スタック
 
@@ -71,15 +71,15 @@ Go言語を使って GCP 主要サービスを段階的に実装する学習プ�
 
 ```bash
 # 必要なツール
-gcloud  # Google Cloud CLI
-go      # Go 1.21+
-terraform # Terraform 1.5+（Phase2のみ）
+gcloud     # Google Cloud CLI
+go         # Go 1.21+
+terraform  # Terraform 1.5+（infra/terraform のみ）
 ```
 
-### Phase1: 画像アップロードAPI を動かす
+### 1. Upload API を動かす
 
 ```bash
-cd phase1-cloud-run
+cd services/upload-api
 
 gcloud run deploy image-upload-api \
   --source . \
@@ -88,10 +88,10 @@ gcloud run deploy image-upload-api \
   --set-env-vars GCS_BUCKET=YOUR_BUCKET,GCP_PROJECT=YOUR_PROJECT
 ```
 
-### Phase3: AI解析パイプラインを動かす
+### 2. Analyze Function を動かす
 
 ```bash
-cd phase3-ai-pipeline
+cd services/analyze-function
 
 gcloud functions deploy analyze-image \
   --gen2 \
@@ -103,10 +103,10 @@ gcloud functions deploy analyze-image \
   --set-env-vars PROJECT_ID=YOUR_PROJECT,PUBSUB_TOPIC=image-analysis-results
 ```
 
-### Phase4: BigQuery サブスクライバーを動かす
+### 3. BigQuery Subscriber を動かす
 
 ```bash
-cd phase4-bigquery
+cd services/bq-subscriber
 
 gcloud run deploy bq-subscriber \
   --source . \
@@ -115,10 +115,10 @@ gcloud run deploy bq-subscriber \
   --set-env-vars PROJECT_ID=YOUR_PROJECT,BQ_DATASET=image_analysis,BQ_TABLE=results
 ```
 
-### Phase2: Terraform で既存リソースを管理する
+### 4. Terraform で既存リソースを管理する
 
 ```bash
-cd phase2-terraform
+cd infra/terraform
 cp terraform.tfvars.example terraform.tfvars
 # terraform.tfvars を編集して値を入力
 
@@ -127,10 +127,10 @@ terraform plan   # 変更差分を確認
 terraform apply  # 適用
 ```
 
-### Phase5: Looker Studio ダッシュボードを作成する
+### 5. Looker Studio ダッシュボードを作成する
 
 ```bash
-cd phase5-looker-studio
+cd analytics/looker-studio
 
 # BigQuery ビューを作成
 bq query --use_legacy_sql=false --project_id=YOUR_PROJECT "$(cat views.sql)"
@@ -149,10 +149,10 @@ FUNCTION_URL=https://asia-northeast1-${PROJECT}.cloudfunctions.net/analyze-image
 curl -X POST ${UPLOAD_API}/upload \
   -F "image=@test.png"
 
-# 2. AI解析を実行（bucket と object を指定）
+# 2. AI解析を実行（bucket_name と object_name を指定）
 curl -X POST ${FUNCTION_URL} \
   -H "Content-Type: application/json" \
-  -d '{"bucket":"${PROJECT}-images","object":"uploads/xxx.png"}'
+  -d '{"bucket_name":"'${PROJECT}'-images","object_name":"uploads/xxx.png"}'
 
 # 3. BigQuery で結果を確認
 bq query --use_legacy_sql=false \
